@@ -18,8 +18,14 @@ export default function Compte() {
       if (!user) return router.push('/login')
       setUser(user)
 
-      const { data: p } = await supabase.from('profiles').select('*').eq('id', user.id).single()
-      setProfile(p)
+      const { data: p, error } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+      if (error || !p) {
+        await supabase.from('profiles').insert({ id: user.id, username: user.email })
+        const { data: p2 } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+        setProfile(p2)
+      } else {
+        setProfile(p)
+      }
 
       const { data: products } = await supabase.from('products').select('*').eq('seller_id', user.id)
       setMyProducts(products || [])
