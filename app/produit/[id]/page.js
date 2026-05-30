@@ -27,6 +27,7 @@ export default function Produit() {
   }, [id])
 
   async function handleBuy() {
+    console.log('handleBuy appelé', user, product)
     if (!user) return router.push('/login')
     setLoading(true)
 
@@ -36,7 +37,27 @@ export default function Produit() {
       return
     }
 
-    setMessage('💳 Redirection vers le paiement...')
+    try {
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productId: product.id,
+          title: product.title,
+          price: product.price
+        })
+      })
+      const data = await res.json()
+      console.log('Réponse Stripe:', data)
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        setMessage('Erreur: ' + data.error)
+      }
+    } catch (err) {
+      console.log('Erreur fetch:', err)
+      setMessage('Erreur: ' + err.message)
+    }
     setLoading(false)
   }
 
